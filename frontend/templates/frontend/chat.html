@@ -1,0 +1,178 @@
+{% extends "frontend/base.html" %}
+{% block content %}
+<div class="chat-wrap">
+  <div class="chat-left">
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="muted">Active Session</div>
+          <select id="sessionSelect" class="select"></select>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px;">
+          <button id="newSessionBtn" class="btn btn-primary">New Session</button>
+          <button id="closeSessionBtn" class="btn">Close Session</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="chatBox" class="chat-box"></div>
+      <hr class="sep" />
+      <div class="row">
+        <input id="msgInput" class="input" placeholder="Type your message..." />
+        <button id="sendBtn" class="btn btn-primary">Send</button>
+      </div>
+      <p id="chatMsg" class="muted"></p>
+    </div>
+  </div>
+
+  <div class="chat-right">
+    <div class="card">
+      <h3>Latest Analysis</h3>
+      <div id="analysisCard" class="muted">Send a message to see results.</div>
+    </div>
+
+    <div class="card">
+      <h3>Alert Status</h3>
+      <div id="alertCard" class="muted">No alerts triggered.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  requireAuthOrRedirect();
+
+  const chatBox = document.getElementById("chatBox");
+  const sessionSelect = document.getElementById("sessionSelect");
+  const analysisCard = document.getElementById("analysisCard");
+  const alertCard = document.getElementById("alertCard");
+  const chatMsg = document.getElementById("chatMsg");
+
+  let currentSessionId = null;
+
+  function bubble(text, who) {
+    const div = document.createElement("div");
+    div.className = `bubble ${who}`;
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function riskBadge(risk) {
+    const cls = (risk || "").toLowerCase();
+    return `<span class="badge ${cls}">${risk}</span>`;
+  }
+
+  async function loadSessions() {
+    const res = await apiFetch("/chat/sessions/", { method: "GET" });
+    if (!res.ok) {
+      sessionSelect.innerHTML = `<option>Error loading sessions</option>`;
+      return;
+    }
+    const sessions = await res.json();
+    sessionSelect.innerHTML = "";
+    if (!sessions.length) {
+      await createSession();
+      return;
+    }
+    sessions.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = `Session #${s.id} (${s.status})`;
+      sessionSelect.appendChild(opt);
+    });
+    currentSessionId = sessions[0].id;
+    sessionSelect.value = currentSessionId;
+    await loadMessages(currentSessionId);
+  }
+
+  async function createSession() {
+    const res = await apiFetch("/chat/sessions/", {
+      method: "POST",
+      body: JSON.stringify({})
+    });
+    if (!res.ok) return;
+    await loadSessions();
+  }
+
+  async function closeSession() {
+    if (!currentSessionId) return;
+    const res = await apiFetch(`/chat/sessions/${currentSessionId}/close/`, { method: "POST" });
+    if (res.ok) await loadSessions();
+  }
+
+  async function loadMessages(sessionId) {
+    chatBox.innerHTML = "";
+    const res = await apiFetch(`/chat/sessions/${sessionId}/messages/`, { method: "GET" });
+    if (!res.ok) return;
+    const msgs = await res.json();
+    msgs.forEach(m => bubble(m.content, m.sender === "USER" ? "user" : "ai"));
+  }
+
+  async function sendMessage() {
+    const text = document.getElementById("msgInput").value.trim();
+    if (!text || !currentSessionId) return;
+
+    document.getElementById("msgInput").value = "";
+    bubble(text, "user");
+    bubble("...", "ai"); // typing indicator
+    chatMsg.textContent = "Analyzing...";
+
+    const res = await apiFetch(`/chat/sessions/${currentSessionId}/send/`, {
+      method: "POST",
+      body: JSON.stringify({ content: text })
+    });
+
+    // remove typing bubble
+    chatBox.lastChild && chatBox.removeChild(chatBox.lastChild);
+
+    if (!res.ok) {
+      chatMsg.textContent = "Failed to send message.";
+      return;
+    }
+
+    const data = await res.json();
+    bubble(data.ai_message.content, "ai");
+    chatMsg.textContent = "";
+
+    const a = data.analysis;
+    analysisCard.innerHTML = `
+      <div>Risk: ${riskBadge(a.risk_level)}</div>
+      <div class="muted">Stress: ${a.stress_score} | Anxiety: ${a.anxiety_score} | Depression: ${a.depression_score}</div>
+      <div class="muted">Overall: ${a.overall_score}</div>
+      <hr class="sep"/>
+      <div><b>Recommendations</b></div>
+      <ul>${(a.recommendations || []).map(r => `<li>${r}</li>`).join("")}</ul>
+    `;
+
+    const alert = data.alert;
+    if (!alert) {
+      alertCard.textContent = "No alert triggered.";
+    } else {
+      alertCard.innerHTML = `
+        <div>Status: <b>${alert.status}</b></div>
+        <div class="muted">Risk: ${alert.risk_level}</div>
+        <div class="muted">Sent To: ${(alert.sent_to || []).join(", ") || "-"}</div>
+        <div class="muted">Info: ${alert.provider_response || "-"}</div>
+      `;
+    }
+  }
+
+  sessionSelect.addEventListener("change", async () => {
+    currentSessionId = sessionSelect.value;
+    await loadMessages(currentSessionId);
+  });
+
+  document.getElementById("newSessionBtn").addEventListener("click", createSession);
+  document.getElementById("closeSessionBtn").addEventListener("click", closeSession);
+  document.getElementById("sendBtn").addEventListener("click", sendMessage);
+  document.getElementById("msgInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+
+  loadSessions();
+</script>
+{% endblock %}
+

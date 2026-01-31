@@ -1,0 +1,175 @@
+{% extends "frontend/base.html" %}
+{% block content %}
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Alert Settings</h2>
+    <p class="muted">Enable alerts and add contacts who can be notified when risk is high.</p>
+
+    <div style="margin-top:10px;">
+      <label class="label">Display Name</label>
+      <input id="displayName" class="input" />
+    </div>
+
+    <div style="margin-top:10px;">
+      <label class="label">Enable Critical Alerts</label>
+      <select id="alertsEnabled" class="select">
+        <option value="false">Disabled</option>
+        <option value="true">Enabled</option>
+      </select>
+      <p class="muted">Enabling implies consent for notifications.</p>
+    </div>
+
+    <button id="saveProfileBtn" class="btn btn-primary" style="margin-top:12px;">Save</button>
+    <p id="profileMsg" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h2>Emergency Contacts</h2>
+
+    <label class="label">Name</label>
+    <input id="cName" class="input" />
+
+    <label class="label">Channel</label>
+    <select id="cChannel" class="select">
+      <option value="EMAIL" selected>Email</option>
+    </select>
+
+    <label class="label">Destination (Email)</label>
+    <input id="cDest" class="input" />
+
+    <button id="addContactBtn" class="btn btn-primary" style="margin-top:12px;">Add Contact</button>
+    <p id="contactMsg" class="muted"></p>
+
+    <hr class="sep"/>
+
+    <div id="contactsList" class="muted">Loading...</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Alert Events</h2>
+  <div id="eventsList" class="muted">Loading...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  requireAuthOrRedirect();
+
+  async function loadProfile() {
+    const res = await apiFetch("/profile/me/", { method: "GET" });
+    if (!res.ok) return;
+    const p = await res.json();
+    document.getElementById("displayName").value = p.display_name || "";
+    document.getElementById("alertsEnabled").value = String(!!p.consent_alerts_enabled);
+  }
+
+  async function saveProfile() {
+    const display_name = document.getElementById("displayName").value.trim();
+    const consent_alerts_enabled = document.getElementById("alertsEnabled").value === "true";
+
+    const res = await apiFetch("/profile/me/", {
+      method: "PATCH",
+      body: JSON.stringify({ display_name, consent_alerts_enabled })
+    });
+
+    const msg = document.getElementById("profileMsg");
+    msg.textContent = res.ok ? "Saved." : "Failed to save.";
+  }
+
+  async function loadContacts() {
+    const res = await apiFetch("/alerts/contacts/", { method: "GET" });
+    if (!res.ok) return;
+    const items = await res.json();
+    const el = document.getElementById("contactsList");
+    if (!items.length) {
+      el.textContent = "No contacts added yet.";
+      return;
+    }
+    el.innerHTML = items.map(c => `
+      <div class="card" style="margin:10px 0;">
+        <div><b>${c.name}</b> <span class="muted">(${c.channel})</span></div>
+        <div class="muted">${c.destination}</div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" onclick="toggleContact(${c.id}, ${!c.enabled})">${c.enabled ? "Disable" : "Enable"}</button>
+          <button class="btn btn-danger" onclick="deleteContact(${c.id})">Delete</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function addContact() {
+    const btn = document.getElementById("addContactBtn");
+    const name = document.getElementById("cName").value.trim();
+    const channel = document.getElementById("cChannel").value;
+    const destination = document.getElementById("cDest").value.trim();
+
+    if (!name) {
+      showToast("Validation", "Contact name is required.", "warn");
+      return;
+    }
+    if (channel === "EMAIL" && !validateEmail(destination)) {
+      showToast("Validation", "A valid email address is required.", "warn");
+      return;
+    }
+
+    setBtnLoading(btn, true, "Add Contact");
+    try {
+      const res = await apiFetch("/alerts/contacts/", {
+        method: "POST",
+        body: JSON.stringify({ name, channel, destination, enabled: true })
+      });
+
+      if (!res.ok) {
+        showToast("Error", "Failed to add contact.", "error");
+        return;
+      }
+      showToast("Added", "Contact added successfully.", "ok");
+      document.getElementById("cName").value = "";
+      document.getElementById("cDest").value = "";
+      await loadContacts();
+    } finally {
+      setBtnLoading(btn, false, "Add Contact");
+    }
+  }
+
+  window.toggleContact = async (id, enabled) => {
+    const res = await apiFetch(`/alerts/contacts/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify({ enabled })
+    });
+    if (res.ok) await loadContacts();
+  };
+
+  window.deleteContact = async (id) => {
+    const res = await apiFetch(`/alerts/contacts/${id}/`, { method: "DELETE" });
+    if (res.ok) await loadContacts();
+  };
+
+  async function loadEvents() {
+    const res = await apiFetch("/alerts/events/", { method: "GET" });
+    if (!res.ok) return;
+    const items = await res.json();
+    const el = document.getElementById("eventsList");
+    if (!items.length) {
+      el.textContent = "No alert events yet.";
+      return;
+    }
+    el.innerHTML = items.slice(0, 20).map(e => `
+      <div class="card" style="margin:10px 0;">
+        <div><b>${e.status}</b> <span class="muted">Risk: ${e.risk_level}</span></div>
+        <div class="muted">Sent to: ${(e.sent_to || []).join(", ") || "-"}</div>
+        <div class="muted">${e.created_at}</div>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
+  document.getElementById("addContactBtn").addEventListener("click", addContact);
+
+  loadProfile();
+  loadContacts();
+  loadEvents();
+</script>
+{% endblock %}
+

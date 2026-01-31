@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - Mental Health Analyzer</title>
+  <link rel="stylesheet" href="/static/frontend/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <div class="card">
+      <h1>Welcome</h1>
+      <p class="muted">This tool is not a medical diagnosis. For emergencies, contact local services immediately.</p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>Login</h2>
+        <p class="muted">Authenticate using JWT.</p>
+
+        <label class="label">Username</label>
+        <input id="loginUser" class="input" />
+
+        <label class="label">Password</label>
+        <input id="loginPass" class="input" type="password" />
+
+        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+          <input id="rememberMe" type="checkbox" />
+          <label for="rememberMe" class="muted">Remember me</label>
+        </div>
+
+        <div style="margin-top:12px;">
+          <button id="loginBtn" class="btn btn-primary">Login</button>
+        </div>
+        <p id="loginMsg" class="muted"></p>
+      </div>
+
+      <div class="card">
+        <h2>Register</h2>
+        <p class="muted">Create a new account.</p>
+
+        <label class="label">Username</label>
+        <input id="regUser" class="input" />
+
+        <label class="label">Email (optional)</label>
+        <input id="regEmail" class="input" />
+
+        <label class="label">Password</label>
+        <input id="regPass" class="input" type="password" />
+
+        <label class="label">Confirm Password</label>
+        <input id="regPass2" class="input" type="password" />
+
+        <div style="margin-top:12px;">
+          <button id="regBtn" class="btn btn-primary">Register</button>
+        </div>
+        <p id="regMsg" class="muted"></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/static/frontend/app.js"></script>
+  <script>
+    // Default remember-me: off
+    document.getElementById("rememberMe").checked = (localStorage.getItem("remember_me") === "1");
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("loginBtn");
+      const username = document.getElementById("loginUser").value.trim();
+      const password = document.getElementById("loginPass").value;
+      const remember = document.getElementById("rememberMe").checked;
+
+      const msg = document.getElementById("loginMsg");
+      msg.textContent = "";
+
+      if (!username || !password) {
+        msg.textContent = "Username and password are required.";
+        showToast("Validation", "Username and password are required.", "warn");
+        return;
+      }
+
+      setRememberMe(remember);
+      setBtnLoading(btn, true, "Login");
+
+      try {
+        const res = await fetch("/api/v1/auth/jwt/create/", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!res.ok) {
+          msg.textContent = "Login failed. Check username/password.";
+          showToast("Login failed", "Invalid username or password.", "error");
+          return;
+        }
+        const data = await res.json();
+        setTokens(data.access, data.refresh);
+        window.location.href = "/chat/";
+      } finally {
+        setBtnLoading(btn, false, "Login");
+      }
+    });
+
+    document.getElementById("regBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("regBtn");
+      const username = document.getElementById("regUser").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPass").value;
+      const password2 = document.getElementById("regPass2").value;
+
+      const msg = document.getElementById("regMsg");
+      msg.textContent = "";
+
+      if (!username) {
+        msg.textContent = "Username is required.";
+        showToast("Validation", "Username is required.", "warn");
+        return;
+      }
+      if (email && !validateEmail(email)) {
+        msg.textContent = "Email format is invalid.";
+        showToast("Validation", "Email format is invalid.", "warn");
+        return;
+      }
+      if (!password || password.length < 8) {
+        msg.textContent = "Password must be at least 8 characters.";
+        showToast("Validation", "Password must be at least 8 characters.", "warn");
+        return;
+      }
+      if (password !== password2) {
+        msg.textContent = "Passwords do not match.";
+        showToast("Validation", "Passwords do not match.", "warn");
+        return;
+      }
+
+      setBtnLoading(btn, true, "Register");
+      try {
+        const res = await fetch("/api/v1/auth/register/", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ username, email, password, password2 })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          msg.textContent = "Registration failed. " + JSON.stringify(err);
+          showToast("Registration failed", "Check details and try again.", "error");
+          return;
+        }
+        msg.textContent = "Registered successfully. Please login.";
+        showToast("Registered", "Account created. Please login.", "ok");
+      } finally {
+        setBtnLoading(btn, false, "Register");
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+{% extends "frontend/base.html" %}
+{% block content %}
+<div class="grid grid-2">
+  <div class="card">
+    <h2>About & Disclaimer</h2>
+    <p class="muted">
+      This application provides a wellness-oriented analysis based on user input. It is designed for educational purposes.
+    </p>
+
+    <hr class="sep"/>
+
+    <h3>Disclaimer</h3>
+    <p class="muted">
+      This tool is not a medical diagnosis and does not replace professional mental health care.
+      If you are in immediate danger or feel unsafe, contact local emergency services right away.
+    </p>
+
+    <h3>Emergency Instructions</h3>
+    <ul class="muted">
+      <li>If you feel at risk of self-harm or harming others, seek urgent help immediately.</li>
+      <li>Contact a trusted person (friend/family) and do not stay alone if you feel unsafe.</li>
+      <li>Use your country's emergency number or local crisis services.</li>
+    </ul>
+
+    <h3>Data Usage & Privacy</h3>
+    <p class="muted">
+      Your chat messages, analysis results, and alert settings are stored in the application database for trend tracking.
+      Alerts are sent only if you explicitly enable consent and add contacts.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>My Profile</h2>
+    <p class="muted">Update your display name and alert consent here (same as settings).</p>
+
+    <label class="label">Display Name</label>
+    <input id="displayName" class="input" />
+
+    <label class="label">Timezone</label>
+    <input id="tz" class="input" disabled />
+
+    <label class="label">Enable Critical Alerts (consent)</label>
+    <select id="alertsEnabled" class="select">
+      <option value="false">Disabled</option>
+      <option value="true">Enabled</option>
+    </select>
+
+    <button id="saveBtn" class="btn btn-primary" style="margin-top:12px;">Save</button>
+    <p id="msg" class="muted"></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  requireAuthOrRedirect();
+
+  async function loadProfile() {
+    const res = await apiFetch("/profile/me/", { method: "GET" });
+    if (!res.ok) {
+      showToast("Error", "Failed to load profile.", "error");
+      return;
+    }
+    const p = await res.json();
+    document.getElementById("displayName").value = p.display_name || "";
+    document.getElementById("tz").value = p.timezone || "";
+    document.getElementById("alertsEnabled").value = String(!!p.consent_alerts_enabled);
+  }
+
+  async function saveProfile() {
+    const btn = document.getElementById("saveBtn");
+    const display_name = document.getElementById("displayName").value.trim();
+    const consent_alerts_enabled = document.getElementById("alertsEnabled").value === "true";
+
+    setBtnLoading(btn, true, "Save");
+    try {
+      const res = await apiFetch("/profile/me/", {
+        method: "PATCH",
+        body: JSON.stringify({ display_name, consent_alerts_enabled })
+      });
+      if (!res.ok) {
+        showToast("Error", "Failed to save profile.", "error");
+        return;
+      }
+      showToast("Saved", "Profile updated.", "ok");
+    } finally {
+      setBtnLoading(btn, false, "Save");
+    }
+  }
+
+  document.getElementById("saveBtn").addEventListener("click", saveProfile);
+  loadProfile();
+</script>
+{% endblock %}
+
