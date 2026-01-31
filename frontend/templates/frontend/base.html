@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mental Health Analyzer</title>
+  <link rel="stylesheet" href="/static/frontend/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Mental Health Analyzer</div>
+    <nav class="nav">
+      <a href="/chat/">Chat</a>
+      <a href="/history/">History/Reports</a>
+      <a href="/results/">Analysis Results</a>
+      <a href="/dashboard/">Dashboard</a>
+      <a href="/settings/">Alerts & Settings</a>
+      <a href="/about/">About</a>
+      <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div id="globalBanner" class="banner hidden"></div>
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toastWrap" class="toast-wrap"></div>
+
+  <script src="/static/frontend/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
