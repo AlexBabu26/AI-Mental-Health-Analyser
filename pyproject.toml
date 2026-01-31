@@ -1,0 +1,19 @@
+[project]
+name = "mental-health-analyzer"
+version = "0.1.0"
+description = "Mental Health Analyzer Application"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=5.2.9",
+    "django-cors-headers",
+    "djangorestframework>=3.16.1",
+    "djangorestframework-simplejwt",
+    "json-repair>=0.7.0",
+    "python-dotenv>=1.2.1",
+    "requests",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
