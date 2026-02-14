@@ -41,7 +41,7 @@ function showToast(title, message, kind = "warn", timeoutMs = 3500) {
   wrap.appendChild(div);
 
   setTimeout(() => {
-    try { wrap.removeChild(div); } catch {}
+    try { wrap.removeChild(div); } catch { }
   }, timeoutMs);
 }
 
@@ -133,6 +133,12 @@ function setBtnLoading(btn, isLoading, labelWhenNotLoading) {
   btn.innerHTML = isLoading
     ? `<span class="spinner"></span>Loading...`
     : labelWhenNotLoading;
+}
+
+function togglePass(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.type = el.type === "password" ? "text" : "password";
 }
 
 document.addEventListener("DOMContentLoaded", bindLogout);
