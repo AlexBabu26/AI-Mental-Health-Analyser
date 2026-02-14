@@ -51,6 +51,26 @@ class DashboardMetricsAPIView(APIView):
         ]
 
         latest = AnalysisResult.objects.filter(session__user=request.user).order_by("-created_at").first()
+        
+        # New: Aggregate summary data for the premium dashboard
+        all_results = AnalysisResult.objects.filter(session__user=request.user)
+        total_sessions = AnalysisResult.objects.filter(session__user=request.user).values("session").distinct().count()
+        
+        avg_stats = all_results.aggregate(
+            avg_stress=Avg("stress_score"),
+            avg_anxiety=Avg("anxiety_score"),
+            avg_depression=Avg("depression_score"),
+            avg_overall=Avg("overall_score")
+        )
+
+        # Get the most common risk level
+        risk_counts = all_results.values("risk_level").annotate(count=Count("risk_level")).order_by("-count")
+        avg_risk_level = risk_counts[0]["risk_level"] if risk_counts.exists() else None
+
+        # Get recent recommendations
+        recent_recs = []
+        if latest and latest.recommendations:
+            recent_recs = latest.recommendations
 
         return Response(
             {
@@ -61,5 +81,14 @@ class DashboardMetricsAPIView(APIView):
                     "overall_score": float(latest.overall_score),
                     "created_at": latest.created_at.isoformat(),
                 } if latest else None,
+                "avg_risk_level": avg_risk_level,
+                "total_sessions": total_sessions,
+                "avg_overall_score": float(avg_stats["avg_overall"] or 0),
+                "avg_metrics": {
+                    "stress": float(avg_stats["avg_stress"] or 0),
+                    "anxiety": float(avg_stats["avg_anxiety"] or 0),
+                    "depression": float(avg_stats["avg_depression"] or 0),
+                },
+                "recent_recommendations": recent_recs
             }
         )

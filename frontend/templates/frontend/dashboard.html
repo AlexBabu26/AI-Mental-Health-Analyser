@@ -51,7 +51,7 @@
   requireAuthOrRedirect();
 
   async function loadDashboard() {
-    const res = await apiFetch("/dashboard/summary/", { method: "GET" });
+    const res = await apiFetch("/dashboard/metrics/", { method: "GET" });
     if (!res.ok) return;
     const d = await res.json();
 
@@ -61,13 +61,13 @@
 
     const m = d.avg_metrics || {};
     document.getElementById("metricsSummary").innerHTML =
-      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Stress</span><span>' + (m.stress||0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ (m.stress||0)*10 +'%"></div></div></div>' +
-      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Anxiety</span><span>' + (m.anxiety||0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ (m.anxiety||0)*10 +'%"></div></div></div>' +
-      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Depression</span><span>' + (m.depression||0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ (m.depression||0)*10 +'%"></div></div></div>';
+      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Stress</span><span>' + (m.stress || 0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:' + (m.stress || 0) * 10 + '%"></div></div></div>' +
+      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Anxiety</span><span>' + (m.anxiety || 0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:' + (m.anxiety || 0) * 10 + '%"></div></div></div>' +
+      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Depression</span><span>' + (m.depression || 0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:' + (m.depression || 0) * 10 + '%"></div></div></div>';
 
     const recs = d.recent_recommendations || [];
     if (recs.length) {
-      document.getElementById("recentRecs").innerHTML = '<ul style="padding-left:18px; margin:0;">' + recs.map(function(r){ return '<li style="margin-bottom:6px;">' + r + '</li>'; }).join("") + '</ul>';
+      document.getElementById("recentRecs").innerHTML = '<ul style="padding-left:18px; margin:0;">' + recs.map(function (r) { return '<li style="margin-bottom:6px;">' + r + '</li>'; }).join("") + '</ul>';
     }
   }
   loadDashboard();
