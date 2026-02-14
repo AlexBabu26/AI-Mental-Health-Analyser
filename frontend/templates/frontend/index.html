@@ -1,0 +1,167 @@
+{% extends "frontend/base.html" %}
+{% block cta_url %}/login/{% endblock %}
+{% block nav_links %}
+<li><a href="/#services">Services</a></li>
+<li><a href="/#programs">Programs</a></li>
+<li><a href="/about/">Resources</a></li>
+<li><a href="/about/">About</a></li>
+{% endblock %}
+{% block main_wrap_open %}{% endblock %}
+{% block main_wrap_close %}{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<section class="hero-section" id="hero">
+  <div class="wrap">
+    <div class="row items-center" style="gap: 48px;">
+      <div class="flex-1" style="min-width: 280px;">
+        <h1>Embark on your mental journey with professionals</h1>
+        <p class="muted text-lg mb-3">AI-driven insights meet clinician-led care. Start your journey toward wellness with a screening designed by experts.</p>
+        <div class="flex gap-md flex-wrap mb-3">
+          <a href="/login/" class="btn btn-accent">Start assessment</a>
+          <a href="#programs" class="btn btn-outline">Explore programs</a>
+        </div>
+        <div class="avatar-stack">
+          <img src="https://ui-avatars.com/api/?name=Dr+Smith&background=8f87ff&color=fff" alt="">
+          <img src="https://ui-avatars.com/api/?name=Sarah+J&background=ffd166&color=333" alt="">
+          <img src="https://ui-avatars.com/api/?name=Mark+L&background=4ecdc4&color=fff" alt="">
+          <span class="muted text-sm" style="margin-left: 10px;">Trusted by <strong>1,200+</strong> wellness seekers</span>
+        </div>
+      </div>
+      <div class="flex-1" style="min-width: 280px;">
+        <div class="rounded-lg overflow-hidden shadow-lg">
+          <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800" alt="Mental wellness" class="img-cover" style="height: 420px;">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Value Proposition -->
+<section class="section" id="services">
+  <div class="wrap">
+    <div class="row card-grid text-center" style="gap: 24px;">
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <div class="text-accent fw-bold text-lg mb-1">01.</div>
+          <h4 class="mb-1">Expert-Led Insights</h4>
+          <p class="muted text-sm mb-0">Our AI models are fine-tuned by clinical researchers to provide accurate wellness feedback.</p>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <div class="text-accent fw-bold text-lg mb-1">02.</div>
+          <h4 class="mb-1">Secure & Private</h4>
+          <p class="muted text-sm mb-0">Your data is encrypted and remains under your control. We prioritize patient confidentiality.</p>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <div class="text-accent fw-bold text-lg mb-1">03.</div>
+          <h4 class="mb-1">Holistic Support</h4>
+          <p class="muted text-sm mb-0">Beyond screening, we connect you with clinical programs tailored to your needs.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dark Feature Panel -->
+<section class="panel-dark">
+  <div class="wrap">
+    <div class="row items-center" style="gap: 48px;">
+      <div class="flex-1" style="min-width: 280px;">
+        <h2 style="font-size: clamp(1.75rem, 4vw, 2.5rem);">Precision mental health, simplified.</h2>
+        <p class="muted text-lg mb-3">By combining advanced linguistic analysis with behavioral science, we help you understand your patterns before they become obstacles.</p>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 12px;">Real-time sentiment tracking</li>
+          <li style="margin-bottom: 12px;">End-to-end encrypted sessions</li>
+          <li>Clinician-approved recommendations</li>
+        </ul>
+      </div>
+      <div class="flex-1" style="min-width: 280px;">
+        <div class="row" style="gap: 16px;">
+          <div class="col-6"><div class="card" style="padding: 20px;"><h4 class="mb-0">94%</h4><p class="muted text-sm mb-0">Model accuracy</p></div></div>
+          <div class="col-6"><div class="card" style="padding: 20px;"><h4 class="mb-0">12k+</h4><p class="muted text-sm mb-0">Daily sessions</p></div></div>
+          <div class="col-6"><div class="card" style="padding: 20px;"><h4 class="mb-0">30+</h4><p class="muted text-sm mb-0">Partner clinics</p></div></div>
+          <div class="col-6"><div class="card" style="padding: 20px;"><h4 class="mb-0">24/7</h4><p class="muted text-sm mb-0">AI support</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Programs -->
+<section class="section" id="programs">
+  <div class="wrap">
+    <h2 class="mb-2">Guided Wellness Programs</h2>
+    <div class="filter-pills">
+      <button type="button" class="filter-pill active" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="filter-pill" data-filter="anxiety" aria-pressed="false">Anxiety</button>
+      <button type="button" class="filter-pill" data-filter="depression" aria-pressed="false">Depression</button>
+      <button type="button" class="filter-pill" data-filter="stress" aria-pressed="false">Stress</button>
+    </div>
+    <div class="row card-grid" id="programsGrid" style="gap: 20px;">
+      <div class="program-card" data-category="anxiety" style="flex: 1; min-width: 240px;">
+        <div class="card"><span class="badge low mb-1">Beginner</span><h5>Panic Relief Path</h5><p class="muted text-sm">Quick-response exercises for intense anxiety moments.</p><a href="/login/" class="text-accent text-sm fw-semi">Learn more →</a></div>
+      </div>
+      <div class="program-card" data-category="stress" style="flex: 1; min-width: 240px;">
+        <div class="card"><span class="badge medium mb-1">Intermediate</span><h5>Workplace Resilience</h5><p class="muted text-sm">Strategies to manage burnout and professional stress.</p><a href="/login/" class="text-accent text-sm fw-semi">Learn more →</a></div>
+      </div>
+      <div class="program-card" data-category="depression" style="flex: 1; min-width: 240px;">
+        <div class="card"><span class="badge low mb-1">Lifestyle</span><h5>Morning Re-activation</h5><p class="muted text-sm">Small daily steps to break the cycle of low energy.</p><a href="/login/" class="text-accent text-sm fw-semi">Learn more →</a></div>
+      </div>
+      <div class="program-card" data-category="anxiety" style="flex: 1; min-width: 240px;">
+        <div class="card"><span class="badge high mb-1">Intensive</span><h5>CBT Deep Dive</h5><p class="muted text-sm">4-week program focusing on cognitive restructuring.</p><a href="/login/" class="text-accent text-sm fw-semi">Learn more →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section-sm bg-white" id="about" style="border-top: 1px solid var(--border);">
+  <div class="wrap text-center">
+    <h2 class="mb-4">Trusted by clinicians and wellness seekers</h2>
+    <div class="row card-grid" style="gap: 24px;">
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <p class="muted mb-2">"The screening gave me language to use with my therapist. It doesn't replace care — it supports it."</p>
+          <div class="flex items-center gap-sm" style="justify-content: center;">
+            <img src="https://ui-avatars.com/api/?name=Alex+M&background=8f87ff&color=fff" alt="" width="40" height="40" class="rounded-full">
+            <div style="text-align: left;"><strong>Alex M.</strong><br><span class="muted text-sm">Wellness seeker</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <p class="muted mb-2">"We use it as a first-step tool. Patients come in better prepared for the conversation."</p>
+          <div class="flex items-center gap-sm" style="justify-content: center;">
+            <img src="https://ui-avatars.com/api/?name=Dr+Lee&background=4ecdc4&color=fff" alt="" width="40" height="40" class="rounded-full">
+            <div style="text-align: left;"><strong>Dr. Lee</strong><br><span class="muted text-sm">Partner clinician</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <p class="muted mb-2">"Clear, private, and the insights are framed as support — not labels. That matters."</p>
+          <div class="flex items-center gap-sm" style="justify-content: center;">
+            <img src="https://ui-avatars.com/api/?name=Jordan+K&background=ffd166&color=333" alt="" width="40" height="40" class="rounded-full">
+            <div style="text-align: left;"><strong>Jordan K.</strong><br><span class="muted text-sm">Wellness seeker</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="section text-center">
+  <div class="wrap">
+    <h2 class="mb-1">Ready to take the first step?</h2>
+    <p class="muted text-lg mb-3">Your screening is private, secure, and designed to support — not replace — professional care.</p>
+    <a href="/login/" class="btn btn-accent">Start assessment</a>
+    <p class="muted text-sm mt-2 mb-0">We never diagnose. We provide insights to help you and your care team.</p>
+  </div>
+</section>
+
+{% endblock %}
