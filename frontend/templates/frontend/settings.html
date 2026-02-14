@@ -11,7 +11,8 @@
   <div class="flex-1" style="min-width: 280px;">
     <div class="card">
       <h4 class="mb-2">Wellness Consent</h4>
-      <p class="muted text-sm mb-3">By enabling alerts, our AI will automatically notify your emergency contacts if a high-risk or critical event is detected during your assessments.</p>
+      <p class="muted text-sm mb-3">By enabling alerts, our AI will automatically notify your emergency contacts if a
+        high-risk or critical event is detected during your assessments.</p>
       <div class="toggle-switch mb-2">
         <input type="checkbox" id="consentToggle">
         <span class="toggle-track"></span>
@@ -29,7 +30,8 @@
         <h4 class="mb-0">Crisis Contacts</h4>
         <button id="addContactBtn" class="btn btn-outline btn-sm">Add New</button>
       </div>
-      <div id="contactsList" class="muted text-sm text-center" style="padding: 24px 0; background: var(--bg-alt); border-radius: var(--radius-md);">
+      <div id="contactsList" class="muted text-sm text-center"
+        style="padding: 24px 0; background: var(--bg-alt); border-radius: var(--radius-md);">
         Loading contact records...
       </div>
     </div>
@@ -39,11 +41,19 @@
 <!-- Modal -->
 <div class="modal-overlay" id="contactModalOverlay">
   <div class="modal-box">
-    <div class="modal-header"><h5>New Crisis Contact</h5></div>
+    <div class="modal-header">
+      <h5>New Crisis Contact</h5>
+    </div>
     <div class="modal-body">
-      <div class="form-group"><label class="form-label">Contact Name</label><input id="contactName" class="form-input" type="text" placeholder="e.g. Spouse, Clinician"></div>
-      <div class="form-group"><label class="form-label">Notification Channel</label><select id="contactChannel" class="form-select"><option value="EMAIL">Email Address</option><option value="WEBHOOK">System Webhook (Advanced)</option></select></div>
-      <div class="form-group"><label class="form-label">Destination</label><input id="contactDest" class="form-input" type="text" placeholder="email@example.com"></div>
+      <div class="form-group"><label class="form-label">Contact Name</label><input id="contactName" class="form-input"
+          type="text" placeholder="e.g. Spouse, Clinician"></div>
+      <div class="form-group"><label class="form-label">Notification Channel</label><select id="contactChannel"
+          class="form-select">
+          <option value="EMAIL">Email Address</option>
+          <option value="WEBHOOK">System Webhook (Advanced)</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Destination</label><input id="contactDest" class="form-input"
+          type="text" placeholder="email@example.com"></div>
       <div class="flex gap-sm">
         <button class="btn btn-outline flex-1" id="cancelModalBtn">Cancel</button>
         <button id="saveContactBtn" class="btn btn-accent flex-1">Add Contact</button>
@@ -66,7 +76,7 @@
   function closeModal() { modalOverlay.classList.remove("open"); }
 
   async function loadSettings() {
-    const res = await apiFetch("/accounts/profile/", { method: "GET" });
+    const res = await apiFetch("/profile/me/", { method: "GET" });
     if (!res.ok) return;
     const profile = await res.json();
     consentToggle.checked = profile.consent_alerts_enabled;
@@ -94,7 +104,7 @@
       return;
     }
     contactsList.style.padding = "0"; contactsList.style.background = "transparent";
-    contactsList.innerHTML = contacts.map(function(c) {
+    contactsList.innerHTML = contacts.map(function (c) {
       return '<div class="contact-item"><div><div class="fw-semi">' + c.name + '</div><div class="text-sm muted">' + c.destination + ' (' + c.channel + ')</div></div>' +
         '<label class="toggle-switch"><input type="checkbox" ' + (c.enabled ? 'checked' : '') + ' onchange="toggleContact(' + c.id + ', this.checked)"><span class="toggle-track"></span></label></div>';
     }).join("");
@@ -104,19 +114,19 @@
     await apiFetch("/alerts/contacts/" + id + "/", { method: "PATCH", body: JSON.stringify({ enabled: enabled }) });
   }
 
-  document.getElementById("saveProfileBtn").addEventListener("click", async function() {
+  document.getElementById("saveProfileBtn").addEventListener("click", async function () {
     var btn = document.getElementById("saveProfileBtn");
     setBtnLoading(btn, true, "Saving...");
-    var res = await apiFetch("/accounts/profile/", { method: "PATCH", body: JSON.stringify({ consent_alerts_enabled: consentToggle.checked }) });
+    var res = await apiFetch("/profile/me/", { method: "PATCH", body: JSON.stringify({ consent_alerts_enabled: consentToggle.checked }) });
     setBtnLoading(btn, false, "Save Preferences");
     if (res.ok) { showToast("Updated", "Your preferences have been applied.", "ok"); updateConsentUI(); }
   });
 
   document.getElementById("addContactBtn").addEventListener("click", openModal);
   document.getElementById("cancelModalBtn").addEventListener("click", closeModal);
-  modalOverlay.addEventListener("click", function(e) { if (e.target === modalOverlay) closeModal(); });
+  modalOverlay.addEventListener("click", function (e) { if (e.target === modalOverlay) closeModal(); });
 
-  document.getElementById("saveContactBtn").addEventListener("click", async function() {
+  document.getElementById("saveContactBtn").addEventListener("click", async function () {
     var btn = document.getElementById("saveContactBtn");
     var name = document.getElementById("contactName").value.trim();
     var channel = document.getElementById("contactChannel").value;
