@@ -217,6 +217,11 @@ class OpenRouterProvider(LLMProvider):
             "max_tokens": 1024,
         }
         resp = requests.post(url, headers=headers, json=payload, timeout=30)
+        
+        if resp.status_code == 403:
+            logger.warning(f"OpenRouter 403 (likely safety filter): {resp.text[:200]}")
+            raise RuntimeError("Message was flagged by safety filters. Please try rephrasing.")
+            
         if resp.status_code != 200:
             error_text = resp.text[:500] if hasattr(resp, 'text') else str(resp.status_code)
             logger.error(f"OpenRouter API error {resp.status_code}: {error_text}")
@@ -317,14 +322,15 @@ def analyze_text(user_text: str, context: Optional[List[Dict[str, str]]] = None)
             analysis_status=AnalysisStatus.FAILED,
         )
     except Exception as exc:
-        logger.error(f"LLM provider error: {str(exc)}", exc_info=True)
+        err_msg = str(exc)
+        logger.error(f"LLM provider error: {err_msg}", exc_info=True)
         return AnalysisPayload(
             stress_score=0,
             anxiety_score=0,
             depression_score=0,
             risk_level=RiskLevel.LOW,
             alert_recommended=False,
-            rationale_short="Analysis failed due to provider error.",
+            rationale_short=f"Analysis failed: {err_msg[:100]}",
             ai_message="I had trouble analyzing that message. Please try again.",
             recommendations=[
                 "Try rephrasing your message.",
