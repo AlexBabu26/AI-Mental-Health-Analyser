@@ -293,7 +293,12 @@
       if (!res.ok) { msg.textContent = "Invalid credentials. Please try again."; showToast("Login failed", "Incorrect username or password.", "error"); return; }
       const data = await res.json();
       setTokens(data.access, data.refresh);
-      window.location.href = "/chat/";
+
+      if (data.is_superuser) {
+        window.location.href = "/admin/";
+      } else {
+        window.location.href = "/chat/";
+      }
     } finally { setBtnLoading(btn, false, "Login to account"); }
   });
 
