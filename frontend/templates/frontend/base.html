@@ -1,14 +1,17 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AI Mental Health Analyzer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/static/frontend/styles.css">
 </head>
+
 <body>
 
   <!-- Navbar -->
@@ -41,7 +44,7 @@
     <div id="globalBanner" class="banner hidden"></div>
     {% block main_wrap_open %}<div class="wrap pt-3">{% endblock %}
       {% block content %}{% endblock %}
-    {% block main_wrap_close %}</div>{% endblock %}
+      {% block main_wrap_close %}</div>{% endblock %}
   </main>
 
   <!-- Footer -->
@@ -50,7 +53,8 @@
       <div class="footer-grid">
         <div>
           <div class="navbar-brand mb-2">AI Mental Health Analyzer</div>
-          <p class="muted text-sm">Clinician-led support and AI-driven insights for your mental wellness journey. Screening and insights only — not a diagnosis.</p>
+          <p class="muted text-sm">Clinician-led support and AI-driven insights for your mental wellness journey.
+            Screening and insights only — not a diagnosis.</p>
         </div>
         <div>
           <h6 class="mb-2">Legal</h6>
@@ -64,9 +68,14 @@
           <a href="#" class="footer-link">Contact</a>
         </div>
         <div>
-          <h6 class="mb-2 text-danger">Crisis Resources</h6>
-          <p class="muted text-sm">If you are in crisis, please contact emergency services or a crisis hotline immediately.</p>
-          <a href="https://findahelpline.com" class="text-danger text-sm fw-semi" target="_blank" rel="noopener">Find crisis resources near you →</a>
+          <h6 class="mb-2 text-danger">Kerala Crisis Helplines</h6>
+          <p class="muted text-sm">Facing a crisis? Reach out to support services in Kerala immediately.</p>
+          <div class="flex flex-column gap-xs">
+            <a href="tel:1056" class="text-accent text-sm fw-semi">DISHA Helpline: 1056</a>
+            <a href="tel:04842540530" class="text-accent text-sm fw-semi">Maithri (Suicide Prev): 0484 2540530</a>
+            <a href="https://findahelpline.com" class="text-danger text-sm" target="_blank" rel="noopener">Global
+              Directory →</a>
+          </div>
         </div>
       </div>
       <div class="footer-bottom">
@@ -83,7 +92,7 @@
 
   <script src="/static/frontend/app.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       var logoutBtn = document.getElementById("logoutBtn");
       if (typeof getAccess === "function" && getAccess()) {
         logoutBtn.classList.remove("hidden");
@@ -92,7 +101,7 @@
       var toggle = document.getElementById("navToggle");
       var menu = document.getElementById("navMenu");
       if (toggle && menu) {
-        toggle.addEventListener("click", function() {
+        toggle.addEventListener("click", function () {
           var open = menu.classList.toggle("open");
           toggle.setAttribute("aria-expanded", open);
         });
@@ -101,4 +110,5 @@
   </script>
   {% block scripts %}{% endblock %}
 </body>
+
 </html>
