@@ -569,6 +569,10 @@ textarea:focus-visible {
   color: var(--text);
 }
 
+.panel-dark .card .muted {
+  color: var(--muted);
+}
+
 /* --- 10. Avatar Stack --- */
 .avatar-stack {
   display: flex;
