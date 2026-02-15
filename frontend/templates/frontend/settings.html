@@ -106,12 +106,23 @@
     contactsList.style.padding = "0"; contactsList.style.background = "transparent";
     contactsList.innerHTML = contacts.map(function (c) {
       return '<div class="contact-item"><div><div class="fw-semi">' + c.name + '</div><div class="text-sm muted">' + c.destination + ' (' + c.channel + ')</div></div>' +
-        '<label class="toggle-switch"><input type="checkbox" ' + (c.enabled ? 'checked' : '') + ' onchange="toggleContact(' + c.id + ', this.checked)"><span class="toggle-track"></span></label></div>';
+        '<div class="d-flex align-items-center gap-3"><label class="toggle-switch"><input type="checkbox" ' + (c.enabled ? 'checked' : '') + ' onchange="toggleContact(' + c.id + ', this.checked)"><span class="toggle-track"></span></label>' +
+        '<button class="btn-icon-delete" onclick="deleteContact(' + c.id + ')" title="Remove contact">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button></div></div>';
     }).join("");
   }
 
   async function toggleContact(id, enabled) {
     await apiFetch("/alerts/contacts/" + id + "/", { method: "PATCH", body: JSON.stringify({ enabled: enabled }) });
+  }
+
+  async function deleteContact(id) {
+    if (!confirm("Are you sure you want to remove this contact?")) return;
+    const res = await apiFetch("/alerts/contacts/" + id + "/", { method: "DELETE" });
+    if (res.ok) {
+      showToast("Removed", "Contact has been removed.", "ok");
+      await loadContacts();
+    }
   }
 
   document.getElementById("saveProfileBtn").addEventListener("click", async function () {
