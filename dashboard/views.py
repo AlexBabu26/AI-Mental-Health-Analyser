@@ -50,22 +50,32 @@ class DashboardMetricsAPIView(APIView):
             for row in qs
         ]
 
-        latest = AnalysisResult.objects.filter(session__user=request.user).order_by("-created_at").first()
+        latest = AnalysisResult.objects.filter(session__user=request.user, analysis_status="OK").order_by("-created_at").first()
         
-        # New: Aggregate summary data for the premium dashboard
-        all_results = AnalysisResult.objects.filter(session__user=request.user)
+        # Aggregate results ONLY from successful analyses
+        successful_results = AnalysisResult.objects.filter(session__user=request.user, analysis_status="OK")
         total_sessions = AnalysisResult.objects.filter(session__user=request.user).values("session").distinct().count()
         
-        avg_stats = all_results.aggregate(
+        avg_stats = successful_results.aggregate(
             avg_stress=Avg("stress_score"),
             avg_anxiety=Avg("anxiety_score"),
             avg_depression=Avg("depression_score"),
             avg_overall=Avg("overall_score")
         )
 
-        # Get the most common risk level
-        risk_counts = all_results.values("risk_level").annotate(count=Count("risk_level")).order_by("-count")
-        avg_risk_level = risk_counts[0]["risk_level"] if risk_counts.exists() else None
+        # Better Risk Calculation: If there's any Critical/High in the last 10, highlight it.
+        # Otherwise, use the most frequent successful risk level.
+        recent_10 = list(successful_results[:10])
+        avg_risk_level = "LOW"
+        
+        if any(r.risk_level == RiskLevel.CRITICAL for r in recent_10):
+            avg_risk_level = "CRITICAL"
+        elif any(r.risk_level == RiskLevel.HIGH for r in recent_10):
+            avg_risk_level = "HIGH"
+        elif recent_10:
+            # Count the most frequent risk level among successful results
+            risk_counts = successful_results.values("risk_level").annotate(count=Count("risk_level")).order_by("-count")
+            avg_risk_level = risk_counts[0]["risk_level"]
 
         # Get recent recommendations
         recent_recs = []
