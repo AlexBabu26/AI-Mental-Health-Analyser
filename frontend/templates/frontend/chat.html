@@ -1,40 +1,44 @@
 {% extends "frontend/base.html" %}
 {% block content %}
-<div class="chat-wrap">
-  <div class="chat-left">
-    <div class="card">
-      <div class="row">
+<div class="row app-grid" style="gap: 24px;">
+  <!-- Left: Chat -->
+  <div class="flex-1" style="min-width: 0;">
+    <div class="card mb-3">
+      <div class="flex justify-between items-center mb-3">
         <div>
-          <div class="muted">Active Session</div>
-          <select id="sessionSelect" class="select"></select>
+          <h2 style="font-size: 1.35rem; margin-bottom: 4px;">Clinical Assessment</h2>
+          <p class="muted text-sm mb-0">Speak naturally about how you've been feeling lately.</p>
         </div>
-        <div style="display:flex;align-items:flex-end;gap:10px;">
-          <button id="newSessionBtn" class="btn btn-primary">New Session</button>
-          <button id="closeSessionBtn" class="btn">Close Session</button>
+        <div class="flex gap-sm items-center">
+          <select id="sessionSelect" class="form-select" style="width: auto; padding: 6px 10px; font-size: 13px;"></select>
+          <button id="newSessionBtn" class="btn btn-accent btn-sm">New</button>
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <div id="chatBox" class="chat-box"></div>
-      <hr class="sep" />
-      <div class="row">
-        <input id="msgInput" class="input" placeholder="Type your message..." />
-        <button id="sendBtn" class="btn btn-primary">Send</button>
+      <div id="chatBox" class="chat-box mb-2"></div>
+      <div class="chat-input-row">
+        <input id="msgInput" class="form-input" placeholder="Share your thoughts here...">
+        <button id="sendBtn" class="btn btn-accent">Send</button>
       </div>
-      <p id="chatMsg" class="muted"></p>
+      <p id="chatMsg" class="muted text-sm mt-1"></p>
     </div>
   </div>
 
-  <div class="chat-right">
-    <div class="card">
-      <h3>Latest Analysis</h3>
-      <div id="analysisCard" class="muted">Send a message to see results.</div>
+  <!-- Right: Analysis -->
+  <div style="flex: 0 0 340px; max-width: 100%;">
+    <div class="card mb-3">
+      <h4 class="mb-2">Live Analysis</h4>
+      <div id="analysisCard" class="muted text-sm">Send a message to begin the analysis.</div>
+      <hr>
+      <h4 class="mb-2">Alert Protocol</h4>
+      <div id="alertCard" class="muted text-sm">No emergency events detected.</div>
     </div>
-
-    <div class="card">
-      <h3>Alert Status</h3>
-      <div id="alertCard" class="muted">No alerts triggered.</div>
+    <div class="card flat bg-alt">
+      <h5 class="mb-1">Assessment Tips</h5>
+      <ul class="text-sm muted" style="padding-left: 18px;">
+        <li>Try to be as specific as possible about your symptoms.</li>
+        <li style="margin-top: 6px;">Describe patterns you've noticed over the last 2 weeks.</li>
+        <li style="margin-top: 6px;">All conversations are encrypted and private.</li>
+      </ul>
     </div>
   </div>
 </div>
@@ -49,38 +53,29 @@
   const analysisCard = document.getElementById("analysisCard");
   const alertCard = document.getElementById("alertCard");
   const chatMsg = document.getElementById("chatMsg");
-
   let currentSessionId = null;
 
   function bubble(text, who) {
     const div = document.createElement("div");
-    div.className = `bubble ${who}`;
+    div.className = "bubble " + who;
     div.textContent = text;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function riskBadge(risk) {
-    const cls = (risk || "").toLowerCase();
-    return `<span class="badge ${cls}">${risk}</span>`;
+    return '<span class="badge ' + (risk || "").toLowerCase() + '">' + risk + '</span>';
   }
 
   async function loadSessions() {
     const res = await apiFetch("/chat/sessions/", { method: "GET" });
-    if (!res.ok) {
-      sessionSelect.innerHTML = `<option>Error loading sessions</option>`;
-      return;
-    }
+    if (!res.ok) { sessionSelect.innerHTML = "<option>Error</option>"; return; }
     const sessions = await res.json();
     sessionSelect.innerHTML = "";
-    if (!sessions.length) {
-      await createSession();
-      return;
-    }
-    sessions.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.id;
-      opt.textContent = `Session #${s.id} (${s.status})`;
+    if (!sessions.length) { await createSession(); return; }
+    sessions.forEach(function(s) {
+      var opt = document.createElement("option");
+      opt.value = s.id; opt.textContent = "Session #" + s.id;
       sessionSelect.appendChild(opt);
     });
     currentSessionId = sessions[0].id;
@@ -89,90 +84,64 @@
   }
 
   async function createSession() {
-    const res = await apiFetch("/chat/sessions/", {
-      method: "POST",
-      body: JSON.stringify({})
-    });
+    const res = await apiFetch("/chat/sessions/", { method: "POST", body: JSON.stringify({}) });
     if (!res.ok) return;
     await loadSessions();
   }
 
-  async function closeSession() {
-    if (!currentSessionId) return;
-    const res = await apiFetch(`/chat/sessions/${currentSessionId}/close/`, { method: "POST" });
-    if (res.ok) await loadSessions();
-  }
-
   async function loadMessages(sessionId) {
     chatBox.innerHTML = "";
-    const res = await apiFetch(`/chat/sessions/${sessionId}/messages/`, { method: "GET" });
+    const res = await apiFetch("/chat/sessions/" + sessionId + "/messages/", { method: "GET" });
     if (!res.ok) return;
     const msgs = await res.json();
-    msgs.forEach(m => bubble(m.content, m.sender === "USER" ? "user" : "ai"));
+    msgs.forEach(function(m) { bubble(m.content, m.sender === "USER" ? "user" : "ai"); });
   }
 
   async function sendMessage() {
     const text = document.getElementById("msgInput").value.trim();
     if (!text || !currentSessionId) return;
-
     document.getElementById("msgInput").value = "";
     bubble(text, "user");
-    bubble("...", "ai"); // typing indicator
-    chatMsg.textContent = "Analyzing...";
+    bubble("...", "ai");
+    chatMsg.textContent = "Clinical engine processing...";
 
-    const res = await apiFetch(`/chat/sessions/${currentSessionId}/send/`, {
-      method: "POST",
-      body: JSON.stringify({ content: text })
+    const res = await apiFetch("/chat/sessions/" + currentSessionId + "/send/", {
+      method: "POST", body: JSON.stringify({ content: text })
     });
-
-    // remove typing bubble
-    chatBox.lastChild && chatBox.removeChild(chatBox.lastChild);
-
-    if (!res.ok) {
-      chatMsg.textContent = "Failed to send message.";
-      return;
-    }
+    if (chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+    if (!res.ok) { chatMsg.textContent = "Connection error."; return; }
 
     const data = await res.json();
     bubble(data.ai_message.content, "ai");
     chatMsg.textContent = "";
 
     const a = data.analysis;
-    analysisCard.innerHTML = `
-      <div>Risk: ${riskBadge(a.risk_level)}</div>
-      <div class="muted">Stress: ${a.stress_score} | Anxiety: ${a.anxiety_score} | Depression: ${a.depression_score}</div>
-      <div class="muted">Overall: ${a.overall_score}</div>
-      <hr class="sep"/>
-      <div><b>Recommendations</b></div>
-      <ul>${(a.recommendations || []).map(r => `<li>${r}</li>`).join("")}</ul>
-    `;
+    analysisCard.innerHTML =
+      '<div class="mb-2">Level: ' + riskBadge(a.risk_level) + '</div>' +
+      '<div class="flex gap-md mb-2">' +
+        '<div class="text-center flex-1"><div class="fw-bold">' + a.stress_score + '</div><div class="text-xs muted">Stress</div></div>' +
+        '<div class="text-center flex-1" style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div class="fw-bold">' + a.anxiety_score + '</div><div class="text-xs muted">Anxiety</div></div>' +
+        '<div class="text-center flex-1"><div class="fw-bold">' + a.depression_score + '</div><div class="text-xs muted">Depr.</div></div>' +
+      '</div>' +
+      '<div class="text-sm bg-alt" style="padding:8px 12px; border-radius:8px; margin-bottom:12px;">Overall: <strong>' + a.overall_score + '</strong></div>' +
+      '<div class="fw-semi text-sm mb-1">Recommendations</div>' +
+      '<ul class="text-sm muted" style="padding-left:18px;">' + (a.recommendations || []).map(function(r){return '<li>'+r+'</li>';}).join("") + '</ul>';
 
-    const alert = data.alert;
-    if (!alert) {
-      alertCard.textContent = "No alert triggered.";
+    var al = data.alert;
+    if (!al) {
+      alertCard.innerHTML = '<div class="alert alert-ok">Standard wellness observed.</div>';
     } else {
-      alertCard.innerHTML = `
-        <div>Status: <b>${alert.status}</b></div>
-        <div class="muted">Risk: ${alert.risk_level}</div>
-        <div class="muted">Sent To: ${(alert.sent_to || []).join(", ") || "-"}</div>
-        <div class="muted">Info: ${alert.provider_response || "-"}</div>
-      `;
+      alertCard.innerHTML =
+        '<div class="alert alert-danger mb-1"><strong>' + al.status + '</strong>: Internal threshold met.</div>' +
+        '<div class="text-sm muted">Protocol: ' + al.risk_level + ' Notification</div>' +
+        '<div class="text-sm muted">Contacts: ' + ((al.sent_to || []).join(", ") || "None") + '</div>';
     }
   }
 
-  sessionSelect.addEventListener("change", async () => {
-    currentSessionId = sessionSelect.value;
-    await loadMessages(currentSessionId);
-  });
-
+  sessionSelect.addEventListener("change", async function() { currentSessionId = sessionSelect.value; await loadMessages(currentSessionId); });
   document.getElementById("newSessionBtn").addEventListener("click", createSession);
-  document.getElementById("closeSessionBtn").addEventListener("click", closeSession);
   document.getElementById("sendBtn").addEventListener("click", sendMessage);
-  document.getElementById("msgInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
-
+  document.getElementById("msgInput").addEventListener("keydown", function(e) { if (e.key === "Enter") sendMessage(); });
   loadSessions();
 </script>
 {% endblock %}
-

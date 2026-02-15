@@ -1,84 +1,75 @@
 {% extends "frontend/base.html" %}
 {% block content %}
-<div class="card">
-  <h2>Dashboard</h2>
-  <p class="muted">Trends over time based on your analysis history.</p>
-  <div class="row">
-    <div>
-      <label class="label">Range (days)</label>
-      <select id="daysSelect" class="select">
-        <option value="7">7</option>
-        <option value="30" selected>30</option>
-        <option value="90">90</option>
-      </select>
+
+<div class="card flat mb-3" style="background: var(--bg-alt);">
+  <h2 style="font-size: 1.35rem; margin-bottom: 4px;">Wellness Dashboard</h2>
+  <p class="muted text-sm mb-0">Overview of your mental health trends and clinical indicators.</p>
+</div>
+
+<div class="row card-grid mb-3" style="gap: 20px;">
+  <div style="flex: 1; min-width: 200px;">
+    <div class="card">
+      <h6 class="muted text-xs mb-1" style="text-transform: uppercase; letter-spacing:.05em;">AVERAGE RISK</h6>
+      <div id="avgRisk" style="font-size: 1.5rem; font-weight: 700;">-</div>
+      <p class="muted text-xs mt-1 mb-0">Based on last 10 assessments</p>
     </div>
-    <div style="display:flex;align-items:flex-end;">
-      <button id="loadBtn" class="btn btn-primary">Load</button>
+  </div>
+  <div style="flex: 1; min-width: 200px;">
+    <div class="card">
+      <h6 class="muted text-xs mb-1" style="text-transform: uppercase; letter-spacing:.05em;">SESSIONS COMPLETED</h6>
+      <div id="sessionCount" style="font-size: 1.5rem; font-weight: 700;">0</div>
+      <p class="muted text-xs mt-1 mb-0">Active journey progress</p>
+    </div>
+  </div>
+  <div style="flex: 1; min-width: 200px;">
+    <div class="card">
+      <h6 class="muted text-xs mb-1" style="text-transform: uppercase; letter-spacing:.05em;">AVERAGE INTENSITY</h6>
+      <div id="avgScore" style="font-size: 1.5rem; font-weight: 700;">0.0</div>
+      <p class="muted text-xs mt-1 mb-0">Overall wellness score</p>
     </div>
   </div>
 </div>
 
-<div class="grid grid-2">
-  <div class="card"><canvas id="scoresChart"></canvas></div>
-  <div class="card"><canvas id="riskChart"></canvas></div>
+<div class="row app-grid" style="gap: 20px;">
+  <div class="flex-1" style="min-width: 0;">
+    <div class="card">
+      <h4 class="mb-3">Metric Distribution</h4>
+      <div id="metricsSummary" class="muted text-sm">Loading indicators...</div>
+    </div>
+  </div>
+  <div style="flex: 0 0 320px; max-width: 100%;">
+    <div class="card">
+      <h4 class="mb-3">Clinical Guidance</h4>
+      <div id="recentRecs" class="text-sm muted">No recent recommendations to display.</div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   requireAuthOrRedirect();
 
-  let scoresChart = null;
-  let riskChart = null;
-
-  async function loadMetrics() {
-    const days = document.getElementById("daysSelect").value;
-    const res = await apiFetch(`/dashboard/metrics/?days=${days}`, { method: "GET" });
+  async function loadDashboard() {
+    const res = await apiFetch("/dashboard/metrics/", { method: "GET" });
     if (!res.ok) return;
+    const d = await res.json();
 
-    const data = await res.json();
-    const points = data.points || [];
+    document.getElementById("avgRisk").innerHTML = '<span class="badge ' + (d.avg_risk_level || 'low').toLowerCase() + '">' + (d.avg_risk_level || 'N/A') + '</span>';
+    document.getElementById("sessionCount").textContent = d.total_sessions || 0;
+    document.getElementById("avgScore").textContent = (d.avg_overall_score || 0).toFixed(1);
 
-    const labels = points.map(p => p.date);
-    const stress = points.map(p => p.stress_avg);
-    const anxiety = points.map(p => p.anxiety_avg);
-    const depression = points.map(p => p.depression_avg);
-    const overall = points.map(p => p.overall_avg);
+    const m = d.avg_metrics || {};
+    document.getElementById("metricsSummary").innerHTML =
+      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Stress</span><span>' + (m.stress || 0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:' + (m.stress || 0) * 10 + '%"></div></div></div>' +
+      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Anxiety</span><span>' + (m.anxiety || 0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:' + (m.anxiety || 0) * 10 + '%"></div></div></div>' +
+      '<div class="mb-2"><div class="flex justify-between text-sm mb-1"><span>Depression</span><span>' + (m.depression || 0).toFixed(1) + '/10</span></div><div class="progress-track"><div class="progress-fill" style="width:' + (m.depression || 0) * 10 + '%"></div></div></div>';
 
-    const highCount = points.map(p => p.high_count);
-    const criticalCount = points.map(p => p.critical_count);
-
-    if (scoresChart) scoresChart.destroy();
-    if (riskChart) riskChart.destroy();
-
-    scoresChart = new Chart(document.getElementById("scoresChart"), {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          { label: "Stress", data: stress },
-          { label: "Anxiety", data: anxiety },
-          { label: "Depression", data: depression },
-          { label: "Overall", data: overall },
-        ]
-      }
-    });
-
-    riskChart = new Chart(document.getElementById("riskChart"), {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          { label: "High Count", data: highCount },
-          { label: "Critical Count", data: criticalCount },
-        ]
-      }
-    });
+    const recs = d.recent_recommendations || [];
+    if (recs.length) {
+      document.getElementById("recentRecs").innerHTML = '<ul style="padding-left:18px; margin:0;">' + recs.map(function (r) { return '<li style="margin-bottom:6px;">' + r + '</li>'; }).join("") + '</ul>';
+    }
   }
-
-  document.getElementById("loadBtn").addEventListener("click", loadMetrics);
-  loadMetrics();
+  loadDashboard();
 </script>
 {% endblock %}
-

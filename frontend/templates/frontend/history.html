@@ -1,26 +1,27 @@
 {% extends "frontend/base.html" %}
 {% block content %}
-<div class="grid grid-2">
-  <div class="card">
-    <h2>Session History</h2>
-    <p class="muted">Select a session to review messages and analysis. Export CSV for report/demo.</p>
 
-    <div id="sessionsWrap" class="muted">Loading sessions...</div>
-  </div>
+<div class="card flat mb-3" style="background: var(--bg-alt);">
+  <h2 style="font-size: 1.35rem; margin-bottom: 4px;">Assessment Records</h2>
+  <p class="muted text-sm mb-0">View your full interaction history and historical analysis snapshots.</p>
+</div>
 
-  <div class="card">
-    <h2>Session Report</h2>
-    <div class="row">
-      <button id="exportCsvBtn" class="btn btn-primary">Export CSV</button>
-      <button id="printBtn" class="btn">Print / Save as PDF</button>
-    </div>
-    <p id="reportHint" class="muted">Select a session first.</p>
-
-    <hr class="sep"/>
-    <div id="sessionMeta" class="muted"></div>
-    <hr class="sep"/>
-    <div id="reportBody" class="muted">No session selected.</div>
-  </div>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date & Time</th>
+        <th>Type</th>
+        <th>Summary</th>
+        <th>Risk Level</th>
+      </tr>
+    </thead>
+    <tbody id="historyTableBody">
+      <tr>
+        <td colspan="4" class="text-center muted" style="padding: 40px 20px;">Curating your records...</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 {% endblock %}
 
@@ -28,198 +29,30 @@
 <script>
   requireAuthOrRedirect();
 
-  const sessionsWrap = document.getElementById("sessionsWrap");
-  const reportBody = document.getElementById("reportBody");
-  const sessionMeta = document.getElementById("sessionMeta");
-  const reportHint = document.getElementById("reportHint");
-
-  let selectedSessionId = null;
-  let lastReportData = null; // cache for export/print
-
   function riskBadge(risk) {
-    const cls = (risk || "").toLowerCase();
-    return `<span class="badge ${cls}">${risk}</span>`;
+    return '<span class="badge ' + (risk || "").toLowerCase() + '">' + risk + '</span>';
   }
 
-  function downloadCSV(filename, rows) {
-    const csv = rows.map(r =>
-      r.map(v => {
-        const s = (v === null || v === undefined) ? "" : String(v);
-        return `"${s.replaceAll('"','""')}"`;
-      }).join(",")
-    ).join("\n");
+  async function loadHistory() {
+    const res = await apiFetch("/analysis/results/", { method: "GET" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = data.results || [];
+    const el = document.getElementById("historyTableBody");
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  async function loadSessions() {
-    sessionsWrap.textContent = "Loading sessions...";
-    try {
-      const res = await apiFetch("/chat/sessions/", { method: "GET" });
-      if (!res.ok) {
-        sessionsWrap.textContent = "Failed to load sessions.";
-        showToast("Error", "Failed to load sessions.", "error");
-        return;
-      }
-      const sessions = await res.json();
-      if (!sessions.length) {
-        sessionsWrap.innerHTML = `<div class="muted">No sessions found. Start a chat first.</div>`;
-        return;
-      }
-
-      const rows = sessions.map(s => `
-        <tr>
-          <td>#${s.id}</td>
-          <td>${s.status}</td>
-          <td>${(s.started_at || "").slice(0,19).replace("T"," ")}</td>
-          <td>${(s.last_message_at || "-").slice(0,19).replace("T"," ")}</td>
-          <td><button class="btn" onclick="selectSession(${s.id})">Open</button></td>
-        </tr>
-      `).join("");
-
-      sessionsWrap.innerHTML = `
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Session</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Last Message</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-
-      // Auto-open if query param session=...
-      const params = new URLSearchParams(window.location.search);
-      const sid = params.get("session");
-      if (sid) selectSession(parseInt(sid, 10));
-    } catch {
-      sessionsWrap.textContent = "Network error loading sessions.";
-    }
-  }
-
-  window.selectSession = async (sessionId) => {
-    selectedSessionId = sessionId;
-    reportHint.textContent = "";
-    reportBody.innerHTML = `<span class="spinner"></span>Loading session report...`;
-    sessionMeta.textContent = "";
-
-    try {
-      const [msgRes, analysisRes] = await Promise.all([
-        apiFetch(`/chat/sessions/${sessionId}/messages/`, { method: "GET" }),
-        apiFetch(`/analysis/results/?session=${sessionId}&page_size=100`, { method: "GET" }),
-      ]);
-
-      if (!msgRes.ok || !analysisRes.ok) {
-        reportBody.textContent = "Failed to load session details.";
-        showToast("Error", "Failed to load session details.", "error");
-        return;
-      }
-
-      const messages = await msgRes.json();
-
-      // paginated results
-      const analysisPage = await analysisRes.json();
-      const analyses = (analysisPage.results || []);
-
-      // Map: triggering_message -> analysis object
-      const analysisByTrigger = {};
-      analyses.forEach(a => { analysisByTrigger[a.triggering_message] = a; });
-
-      // Build report data for export
-      const exportRows = [
-        ["timestamp", "sender", "content", "stress", "anxiety", "depression", "overall", "risk", "alert_recommended", "recommendations"]
-      ];
-
-      const parts = messages.map(m => {
-        const a = (m.sender === "USER") ? analysisByTrigger[m.id] : null;
-        exportRows.push([
-          m.created_at,
-          m.sender,
-          m.content,
-          a ? a.stress_score : "",
-          a ? a.anxiety_score : "",
-          a ? a.depression_score : "",
-          a ? a.overall_score : "",
-          a ? a.risk_level : "",
-          a ? a.alert_recommended : "",
-          a ? (a.recommendations || []).join(" | ") : ""
-        ]);
-
-        let analysisHtml = "";
-        if (a) {
-          analysisHtml = `
-            <div class="card" style="margin-top:10px;">
-              <div>Risk: ${riskBadge(a.risk_level)} <span class="muted">Overall: ${a.overall_score}</span></div>
-              <div class="muted">Stress ${a.stress_score} | Anxiety ${a.anxiety_score} | Depression ${a.depression_score}</div>
-              <div class="muted" style="margin-top:8px;"><b>Recommendations:</b>
-                <ul>${(a.recommendations || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-              </div>
-            </div>
-          `;
-        }
-
-        const who = (m.sender === "USER") ? "user" : "ai";
-        return `
-          <div class="bubble ${who}">
-            ${escapeHtml(m.content)}
-            <div class="muted" style="margin-top:6px;">${(m.created_at || "").slice(0,19).replace("T"," ")}</div>
-            ${analysisHtml}
-          </div>
-        `;
-      }).join("");
-
-      sessionMeta.innerHTML = `<div class="muted">Session #${sessionId} — messages: ${messages.length}, analyses: ${analyses.length}</div>`;
-      reportBody.innerHTML = parts || `<div class="muted">No messages.</div>`;
-
-      lastReportData = { sessionId, exportRows, html: reportBody.innerHTML };
-
-      showToast("Loaded", `Session #${sessionId} loaded.`, "ok");
-    } catch (e) {
-      reportBody.textContent = "Network error while generating report.";
-    }
-  };
-
-  document.getElementById("exportCsvBtn").addEventListener("click", () => {
-    if (!lastReportData) {
-      showToast("Export", "Select a session first.", "warn");
+    if (!items.length) {
+      el.innerHTML = '<tr><td colspan="4" class="text-center muted" style="padding:40px 20px;">No interaction records found.</td></tr>';
       return;
     }
-    downloadCSV(`session_${lastReportData.sessionId}_report.csv`, lastReportData.exportRows);
-  });
 
-  document.getElementById("printBtn").addEventListener("click", () => {
-    if (!lastReportData) {
-      showToast("Print", "Select a session first.", "warn");
-      return;
-    }
-    const w = window.open("", "_blank");
-    w.document.write(`
-      <html><head><title>Session ${lastReportData.sessionId} Report</title></head>
-      <body>
-        <h1>Session ${lastReportData.sessionId} Report</h1>
-        <p>Generated: ${new Date().toISOString()}</p>
-        ${lastReportData.html}
-      </body></html>
-    `);
-    w.document.close();
-    w.focus();
-    w.print();
-  });
-
-  loadSessions();
+    el.innerHTML = items.map(function (item) {
+      return '<tr>' +
+        '<td><div class="fw-semi">' + new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + '</div><div class="text-xs muted">' + new Date(item.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) + '</div></td>' +
+        '<td class="text-sm fw-semi text-accent">SESSION #' + item.session + '</td>' +
+        '<td class="text-sm muted" style="max-width:300px;"><div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + item.rationale_short + '</div></td>' +
+        '<td>' + riskBadge(item.risk_level) + '</td></tr>';
+    }).join("");
+  }
+  loadHistory();
 </script>
 {% endblock %}
-

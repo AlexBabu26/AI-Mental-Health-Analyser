@@ -50,7 +50,37 @@ class DashboardMetricsAPIView(APIView):
             for row in qs
         ]
 
-        latest = AnalysisResult.objects.filter(session__user=request.user).order_by("-created_at").first()
+        latest = AnalysisResult.objects.filter(session__user=request.user, analysis_status="OK").order_by("-created_at").first()
+        
+        # Aggregate results ONLY from successful analyses
+        successful_results = AnalysisResult.objects.filter(session__user=request.user, analysis_status="OK")
+        total_sessions = AnalysisResult.objects.filter(session__user=request.user).values("session").distinct().count()
+        
+        avg_stats = successful_results.aggregate(
+            avg_stress=Avg("stress_score"),
+            avg_anxiety=Avg("anxiety_score"),
+            avg_depression=Avg("depression_score"),
+            avg_overall=Avg("overall_score")
+        )
+
+        # Better Risk Calculation: If there's any Critical/High in the last 10, highlight it.
+        # Otherwise, use the most frequent successful risk level.
+        recent_10 = list(successful_results[:10])
+        avg_risk_level = "LOW"
+        
+        if any(r.risk_level == RiskLevel.CRITICAL for r in recent_10):
+            avg_risk_level = "CRITICAL"
+        elif any(r.risk_level == RiskLevel.HIGH for r in recent_10):
+            avg_risk_level = "HIGH"
+        elif recent_10:
+            # Count the most frequent risk level among successful results
+            risk_counts = successful_results.values("risk_level").annotate(count=Count("risk_level")).order_by("-count")
+            avg_risk_level = risk_counts[0]["risk_level"]
+
+        # Get recent recommendations
+        recent_recs = []
+        if latest and latest.recommendations:
+            recent_recs = latest.recommendations
 
         return Response(
             {
@@ -61,5 +91,14 @@ class DashboardMetricsAPIView(APIView):
                     "overall_score": float(latest.overall_score),
                     "created_at": latest.created_at.isoformat(),
                 } if latest else None,
+                "avg_risk_level": avg_risk_level,
+                "total_sessions": total_sessions,
+                "avg_overall_score": float(avg_stats["avg_overall"] or 0),
+                "avg_metrics": {
+                    "stress": float(avg_stats["avg_stress"] or 0),
+                    "anxiety": float(avg_stats["avg_anxiety"] or 0),
+                    "depression": float(avg_stats["avg_depression"] or 0),
+                },
+                "recent_recommendations": recent_recs
             }
         )

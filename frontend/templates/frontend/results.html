@@ -1,60 +1,13 @@
 {% extends "frontend/base.html" %}
 {% block content %}
-<div class="card">
-  <h2>Analysis Results</h2>
-  <p class="muted">Browse historical predictions with pagination and filters.</p>
 
-  <div class="grid grid-2">
-    <div>
-      <label class="label">Risk Level</label>
-      <select id="riskFilter" class="select">
-        <option value="">All</option>
-        <option value="LOW">LOW</option>
-        <option value="MEDIUM">MEDIUM</option>
-        <option value="HIGH">HIGH</option>
-        <option value="CRITICAL">CRITICAL</option>
-      </select>
-    </div>
-
-    <div>
-      <label class="label">Session ID (optional)</label>
-      <input id="sessionFilter" class="input" placeholder="e.g., 12" />
-    </div>
-  </div>
-
-  <div class="grid grid-2" style="margin-top:12px;">
-    <div>
-      <label class="label">Start Date (YYYY-MM-DD)</label>
-      <input id="startDate" class="input" placeholder="2026-01-01" />
-    </div>
-    <div>
-      <label class="label">End Date (YYYY-MM-DD)</label>
-      <input id="endDate" class="input" placeholder="2026-01-31" />
-    </div>
-  </div>
-
-  <div class="row" style="margin-top:12px;">
-    <button id="applyBtn" class="btn btn-primary">Apply Filters</button>
-    <button id="resetBtn" class="btn">Reset</button>
-    <div>
-      <label class="label">Page Size</label>
-      <select id="pageSize" class="select">
-        <option value="10">10</option>
-        <option value="20" selected>20</option>
-        <option value="50">50</option>
-      </select>
-    </div>
-  </div>
-
-  <p id="statusLine" class="muted"></p>
+<div class="card flat mb-3" style="background: var(--bg-alt);">
+  <h2 style="font-size: 1.35rem; margin-bottom: 4px;">Recent Analysis Results</h2>
+  <p class="muted text-sm mb-0">Detailed breakdown of your most recent assessment outputs.</p>
 </div>
 
-<div class="card">
-  <div id="resultsWrap" class="muted">Loading...</div>
-  <div class="row" style="margin-top:12px;">
-    <button id="prevBtn" class="btn">Prev</button>
-    <button id="nextBtn" class="btn">Next</button>
-  </div>
+<div id="resultsList" class="row card-grid" style="gap: 20px;">
+  <div class="text-center muted" style="padding: 40px 0; width: 100%;">Loading analysis data...</div>
 </div>
 {% endblock %}
 
@@ -62,125 +15,36 @@
 <script>
   requireAuthOrRedirect();
 
-  const resultsWrap = document.getElementById("resultsWrap");
-  const statusLine = document.getElementById("statusLine");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-
-  let currentPage = 1;
-  let lastNext = null;
-  let lastPrev = null;
-
   function riskBadge(risk) {
-    const cls = (risk || "").toLowerCase();
-    return `<span class="badge ${cls}">${risk}</span>`;
+    return '<span class="badge ' + (risk || "").toLowerCase() + '">' + risk + '</span>';
   }
 
-  function validDateOrEmpty(v) {
-    if (!v) return true;
-    return /^\d{4}-\d{2}-\d{2}$/.test(v);
-  }
-
-  function buildQuery(page) {
-    const risk = document.getElementById("riskFilter").value.trim();
-    const session = document.getElementById("sessionFilter").value.trim();
-    const start = document.getElementById("startDate").value.trim();
-    const end = document.getElementById("endDate").value.trim();
-    const pageSize = document.getElementById("pageSize").value;
-
-    const qs = new URLSearchParams();
-    qs.set("page", String(page));
-    qs.set("page_size", pageSize);
-
-    if (risk) qs.set("risk_level", risk);
-    if (session) qs.set("session", session);
-    if (start) qs.set("start_date", start);
-    if (end) qs.set("end_date", end);
-
-    return qs.toString();
-  }
-
-  async function loadPage(page) {
-    const start = document.getElementById("startDate").value.trim();
-    const end = document.getElementById("endDate").value.trim();
-    if (!validDateOrEmpty(start) || !validDateOrEmpty(end)) {
-      showToast("Validation", "Dates must be in YYYY-MM-DD format.", "warn");
-      return;
-    }
-
-    currentPage = page;
-    resultsWrap.innerHTML = `<span class="spinner"></span>Loading...`;
-    statusLine.textContent = "";
-
-    const q = buildQuery(page);
-    const res = await apiFetch(`/analysis/results/?${q}`, { method: "GET" });
-    if (!res.ok) {
-      resultsWrap.textContent = "Failed to load results.";
-      showToast("Error", "Failed to load analysis results.", "error");
-      return;
-    }
-
+  async function loadResults() {
+    const res = await apiFetch("/analysis/results/", { method: "GET" });
+    if (!res.ok) return;
     const data = await res.json();
     const items = data.results || [];
-    lastNext = data.next;
-    lastPrev = data.previous;
-
-    prevBtn.disabled = !lastPrev;
-    nextBtn.disabled = !lastNext;
-
-    statusLine.textContent = `Total: ${data.count || 0} — Page: ${currentPage}`;
+    const el = document.getElementById("resultsList");
 
     if (!items.length) {
-      resultsWrap.innerHTML = `<div class="muted">No results found for the selected filters.</div>`;
+      el.innerHTML = '<div class="card text-center muted" style="width:100%;">No results found. Start an assessment to see data.</div>';
       return;
     }
 
-    const rows = items.map(a => `
-      <tr>
-        <td>${(a.created_at || "").slice(0,19).replace("T"," ")}</td>
-        <td>#${a.session}</td>
-        <td>${riskBadge(a.risk_level)}</td>
-        <td>${a.overall_score}</td>
-        <td>${a.stress_score}/${a.anxiety_score}/${a.depression_score}</td>
-        <td>${a.alert_recommended ? "Yes" : "No"}</td>
-        <td>
-          <a href="/history/?session=${a.session}">View Session</a>
-        </td>
-      </tr>
-    `).join("");
-
-    resultsWrap.innerHTML = `
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Session</th>
-            <th>Risk</th>
-            <th>Overall</th>
-            <th>S/A/D</th>
-            <th>Alert</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
+    el.innerHTML = items.map(function (item) {
+      return '<div style="flex:1; min-width:320px; max-width:100%;"><div class="card">' +
+        '<div class="flex justify-between items-start mb-3"><div><div class="text-sm fw-semi text-accent mb-1">SESSION #' + item.session + '</div><h4 class="mb-0">' + new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</h4></div>' + riskBadge(item.risk_level) + '</div>' +
+        '<div class="flex gap-md mb-3">' +
+        '<div class="text-center flex-1"><div class="fw-bold">' + item.stress_score + '</div><div class="text-xs muted">Stress</div></div>' +
+        '<div class="text-center flex-1" style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div class="fw-bold">' + item.anxiety_score + '</div><div class="text-xs muted">Anxiety</div></div>' +
+        '<div class="text-center flex-1"><div class="fw-bold">' + item.depression_score + '</div><div class="text-xs muted">Depr.</div></div>' +
+        '</div>' +
+        '<div class="text-sm mb-3" style="padding:12px; background:var(--bg-alt); border-radius:8px;"><div class="fw-semi mb-1">Clinical Rationale</div><div class="muted">' + item.rationale_short + '</div></div>' +
+        '<div class="fw-semi text-sm text-accent mb-1">KEY RECOMMENDATIONS</div>' +
+        '<ul class="text-sm muted" style="padding-left:18px; margin:0;">' + (item.recommendations || []).map(function (r) { return '<li>' + r + '</li>'; }).join("") + '</ul>' +
+        '</div></div>';
+    }).join("");
   }
-
-  document.getElementById("applyBtn").addEventListener("click", () => loadPage(1));
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    document.getElementById("riskFilter").value = "";
-    document.getElementById("sessionFilter").value = "";
-    document.getElementById("startDate").value = "";
-    document.getElementById("endDate").value = "";
-    document.getElementById("pageSize").value = "20";
-    loadPage(1);
-  });
-
-  prevBtn.addEventListener("click", () => { if (lastPrev) loadPage(currentPage - 1); });
-  nextBtn.addEventListener("click", () => { if (lastNext) loadPage(currentPage + 1); });
-
-  loadPage(1);
+  loadResults();
 </script>
 {% endblock %}
-

@@ -1,158 +1,335 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login - Mental Health Analyzer</title>
-  <link rel="stylesheet" href="/static/frontend/styles.css" />
-</head>
-<body>
-  <main class="container">
-    <div class="card">
-      <h1>Welcome</h1>
-      <p class="muted">This tool is not a medical diagnosis. For emergencies, contact local services immediately.</p>
-    </div>
+{% extends "frontend/base.html" %}
+{% block cta_url %}/login/#auth-section{% endblock %}
+{% block nav_links %}
+<li><a href="/#services">Services</a></li>
+<li><a href="/#programs">Programs</a></li>
+<li><a href="/about/">Resources</a></li>
+<li><a href="/about/">About</a></li>
+{% endblock %}
+{% block main_wrap_open %}{% endblock %}
+{% block main_wrap_close %}{% endblock %}
+{% block content %}
 
-    <div class="grid grid-2">
-      <div class="card">
-        <h2>Login</h2>
-        <p class="muted">Authenticate using JWT.</p>
-
-        <label class="label">Username</label>
-        <input id="loginUser" class="input" />
-
-        <label class="label">Password</label>
-        <input id="loginPass" class="input" type="password" />
-
-        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
-          <input id="rememberMe" type="checkbox" />
-          <label for="rememberMe" class="muted">Remember me</label>
+<!-- Hero -->
+<section class="hero-section">
+  <div class="wrap">
+    <div class="row items-center" style="gap: 48px;">
+      <div class="flex-1" style="min-width: 280px;">
+        <h1>Embark on your mental journey with professionals</h1>
+        <p class="muted text-lg mb-3">AI-driven insights meet clinician-led care. Start your journey toward wellness
+          with a screening designed by experts.</p>
+        <div class="flex gap-md flex-wrap mb-3">
+          <a href="#auth-section" class="btn btn-accent">Start your assessment</a>
+          <a href="#programs" class="btn btn-outline">Explore programs</a>
         </div>
-
-        <div style="margin-top:12px;">
-          <button id="loginBtn" class="btn btn-primary">Login</button>
+        <div class="avatar-stack">
+          <img src="https://ui-avatars.com/api/?name=Dr+Nair&background=8f87ff&color=fff" alt="">
+          <img src="https://ui-avatars.com/api/?name=Anjali+P&background=ffd166&color=333" alt="">
+          <img src="https://ui-avatars.com/api/?name=Arjun+K&background=4ecdc4&color=fff" alt="">
+          <span class="muted text-sm" style="margin-left: 10px;">Trusted by <strong>1,200+</strong> wellness seekers in
+            Kerala</span>
         </div>
-        <p id="loginMsg" class="muted"></p>
       </div>
-
-      <div class="card">
-        <h2>Register</h2>
-        <p class="muted">Create a new account.</p>
-
-        <label class="label">Username</label>
-        <input id="regUser" class="input" />
-
-        <label class="label">Email (optional)</label>
-        <input id="regEmail" class="input" />
-
-        <label class="label">Password</label>
-        <input id="regPass" class="input" type="password" />
-
-        <label class="label">Confirm Password</label>
-        <input id="regPass2" class="input" type="password" />
-
-        <div style="margin-top:12px;">
-          <button id="regBtn" class="btn btn-primary">Register</button>
+      <div class="flex-1" style="min-width: 280px;">
+        <div class="rounded-lg overflow-hidden shadow-lg">
+          <img src="https://images.pexels.com/photos/5668887/pexels-photo-5668887.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Mental Wellness" class="img-cover" style="height: 420px;">
         </div>
-        <p id="regMsg" class="muted"></p>
       </div>
     </div>
-  </main>
+  </div>
+</section>
 
-  <script src="/static/frontend/app.js"></script>
-  <script>
-    // Default remember-me: off
-    document.getElementById("rememberMe").checked = (localStorage.getItem("remember_me") === "1");
+<!-- Value Proposition -->
+<section class="section bg-white" style="border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="wrap">
+    <div class="row card-grid text-center" style="gap: 24px;">
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <div class="text-accent fw-bold text-lg mb-1">01.</div>
+          <h4 class="mb-1">Expert-Led Insights</h4>
+          <p class="muted text-sm mb-0">Our AI models are fine-tuned by clinical researchers to provide accurate
+            wellness feedback.</p>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <div class="text-accent fw-bold text-lg mb-1">02.</div>
+          <h4 class="mb-1">Secure & Private</h4>
+          <p class="muted text-sm mb-0">Your data is encrypted and remains under your control. We prioritize patient
+            confidentiality.</p>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 260px;">
+        <div class="card">
+          <div class="text-accent fw-bold text-lg mb-1">03.</div>
+          <h4 class="mb-1">Holistic Support</h4>
+          <p class="muted text-sm mb-0">Beyond assessments, we connect you with clinical programs tailored to your
+            specific needs.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const btn = document.getElementById("loginBtn");
-      const username = document.getElementById("loginUser").value.trim();
-      const password = document.getElementById("loginPass").value;
-      const remember = document.getElementById("rememberMe").checked;
+<!-- Dark Feature Panel -->
+<section class="panel-dark">
+  <div class="wrap">
+    <div class="row items-center" style="gap: 48px;">
+      <div class="flex-1" style="min-width: 280px;">
+        <h2 style="font-size: clamp(1.75rem, 4vw, 2.5rem);">Precision mental health, simplified.</h2>
+        <p class="muted text-lg mb-3">By combining advanced linguistic analysis with behavioral science, we help you
+          understand your patterns before they become obstacles.</p>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 12px;">Real-time sentiment tracking</li>
+          <li style="margin-bottom: 12px;">End-to-end encrypted sessions</li>
+          <li>Clinician-approved recommendations</li>
+        </ul>
+      </div>
+      <div class="flex-1" style="min-width: 280px;">
+        <div class="row" style="gap: 16px;">
+          <div class="col-6">
+            <div class="card" style="padding: 20px;">
+              <h4 class="mb-0">94%</h4>
+              <p class="muted text-sm mb-0">Model Accuracy</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card" style="padding: 20px;">
+              <h4 class="mb-0">12k+</h4>
+              <p class="muted text-sm mb-0">Daily Sessions</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card" style="padding: 20px;">
+              <h4 class="mb-0">30+</h4>
+              <p class="muted text-sm mb-0">Partner Clinics</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card" style="padding: 20px;">
+              <h4 class="mb-0">24/7</h4>
+              <p class="muted text-sm mb-0">AI Support</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-      const msg = document.getElementById("loginMsg");
-      msg.textContent = "";
+<!-- Auth + Programs -->
+<section class="section bg-alt" id="auth-section">
+  <div class="wrap">
+    <div class="row" style="gap: 40px;">
+      <!-- Forms Column -->
+      <div style="flex: 0 0 400px; max-width: 100%;">
+        <!-- Login Form -->
+        <div class="card mb-3" id="loginForm">
+          <h3 class="mb-1">Welcome back</h3>
+          <p class="muted text-sm mb-2">Sign in to resume your wellness journey.</p>
+          <p class="muted text-xs mb-2">We provide screening and insights only — not a diagnosis. Your data is private
+            and secure.</p>
 
-      if (!username || !password) {
-        msg.textContent = "Username and password are required.";
-        showToast("Validation", "Username and password are required.", "warn");
-        return;
-      }
+          <form id="loginFormEl" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="loginUser">Username</label>
+              <input id="loginUser" class="form-input" name="username" type="text" placeholder="Enter username"
+                required>
+              <div class="form-error">Please enter your username.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="loginPass">Password</label>
+              <div class="pass-wrap">
+                <input id="loginPass" class="form-input" name="password" type="password" placeholder="••••••••"
+                  required>
+                <button class="pass-toggle" type="button" onclick="togglePass('loginPass')"
+                  aria-label="Toggle password visibility">👁️</button>
+              </div>
+              <div class="form-error">Please enter your password.</div>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+              <div class="form-check">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe" class="muted text-sm">Remember me</label>
+              </div>
+              <span class="reset-link" onclick="showReset()">Forgot password?</span>
+            </div>
+            <button id="loginBtn" type="submit" class="btn btn-accent btn-full mb-2">Login to account</button>
+          </form>
+          <p class="text-center text-sm muted">New here? <span class="text-accent fw-semi" style="cursor:pointer"
+              onclick="showAuth('reg')">Create account</span></p>
+          <p id="loginMsg" class="text-center text-sm text-danger"></p>
+        </div>
 
-      setRememberMe(remember);
-      setBtnLoading(btn, true, "Login");
+        <!-- Register Form -->
+        <div class="card mb-3 hidden" id="regForm">
+          <h3 class="mb-1">Create account</h3>
+          <p class="muted text-sm mb-2">Begin your private mental healthcare assessment.</p>
+          <div class="form-group"><label class="form-label">Username</label><input id="regUser" class="form-input"
+              type="text"></div>
+          <div class="form-group"><label class="form-label">Email</label><input id="regEmail" class="form-input"
+              type="email" placeholder="Optional"></div>
+          <div class="form-group"><label class="form-label">Password</label>
+            <div class="pass-wrap"><input id="regPass" class="form-input" type="password"><button class="pass-toggle"
+                type="button" onclick="togglePass('regPass')">👁️</button></div>
+          </div>
+          <div class="form-group"><label class="form-label">Confirm Password</label>
+            <div class="pass-wrap"><input id="regPass2" class="form-input" type="password"><button class="pass-toggle"
+                type="button" onclick="togglePass('regPass2')">👁️</button></div>
+          </div>
+          <button id="regBtn" class="btn btn-accent btn-full mb-2">Register Account</button>
+          <p class="text-center text-sm muted">Already have an account? <span class="text-accent fw-semi"
+              style="cursor:pointer" onclick="showAuth('login')">Login</span></p>
+          <p id="regMsg" class="text-center text-sm text-danger"></p>
+        </div>
 
-      try {
-        const res = await fetch("/api/v1/auth/jwt/create/", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ username, password })
-        });
+        <!-- Reset Form -->
+        <div class="card mb-3 hidden" id="resetForm">
+          <h3 class="mb-1">Reset access</h3>
+          <p class="muted text-sm mb-2">Verify your credentials to reset your password.</p>
+          <div class="form-group"><label class="form-label">Username</label><input id="resetUser" class="form-input"
+              type="text"></div>
+          <div class="form-group"><label class="form-label">Registered Email</label><input id="resetEmail"
+              class="form-input" type="email"></div>
+          <div class="form-group"><label class="form-label">New Password</label>
+            <div class="pass-wrap"><input id="resetPass" class="form-input" type="password"><button class="pass-toggle"
+                type="button" onclick="togglePass('resetPass')">👁️</button></div>
+          </div>
+          <div class="form-group"><label class="form-label">Confirm New Password</label>
+            <div class="pass-wrap"><input id="resetPass2" class="form-input" type="password"><button class="pass-toggle"
+                type="button" onclick="togglePass('resetPass2')">👁️</button></div>
+          </div>
+          <button id="resetBtn" class="btn btn-accent btn-full mb-2">Update Password</button>
+          <p class="text-center text-sm muted"><span class="text-accent fw-semi" style="cursor:pointer"
+              onclick="showAuth('login')">Back to login</span></p>
+          <p id="resetMsg" class="text-center text-sm text-danger"></p>
+        </div>
+      </div>
 
-        if (!res.ok) {
-          msg.textContent = "Login failed. Check username/password.";
-          showToast("Login failed", "Invalid username or password.", "error");
-          return;
-        }
-        const data = await res.json();
-        setTokens(data.access, data.refresh);
-        window.location.href = "/chat/";
-      } finally {
-        setBtnLoading(btn, false, "Login");
-      }
-    });
+      <!-- Programs Grid -->
+      <div class="flex-1" id="programs" style="min-width: 0;">
+        <h3 class="mb-2">Guided Wellness Programs</h3>
+        <div class="filter-pills">
+          <button type="button" class="filter-pill active" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="filter-pill" data-filter="anxiety" aria-pressed="false">Anxiety</button>
+          <button type="button" class="filter-pill" data-filter="depression" aria-pressed="false">Depression</button>
+          <button type="button" class="filter-pill" data-filter="stress" aria-pressed="false">Stress</button>
+        </div>
+        <div class="row card-grid" id="programsGrid" style="gap: 16px;">
+          <div class="program-card" data-category="stress" style="flex: 1; min-width: 220px;">
+            <div class="card"><span class="badge low mb-1">Academic</span>
+              <h5>Student Wellness</h5>
+              <p class="muted text-sm">Managing academic pressure and exam-related anxiety effectively.</p><a href="#"
+                class="text-accent text-sm fw-semi">Learn more →</a>
+            </div>
+          </div>
+          <div class="program-card" data-category="anxiety" style="flex: 1; min-width: 220px;">
+            <div class="card"><span class="badge low mb-1">Beginner</span>
+              <h5>Panic Relief Path</h5>
+              <p class="muted text-sm">Quick-response exercises for intense anxiety moments.</p><a href="#"
+                class="text-accent text-sm fw-semi">Learn more →</a>
+            </div>
+          </div>
+          <div class="program-card" data-category="stress" style="flex: 1; min-width: 220px;">
+            <div class="card"><span class="badge medium mb-1">Professional</span>
+              <h5>Workplace Resilience</h5>
+              <p class="muted text-sm">Strategies to manage burnout and professional stress in the IT/Corporate sector.
+              </p><a href="#" class="text-accent text-sm fw-semi">Learn more →</a>
+            </div>
+          </div>
+          <div class="program-card" data-category="depression" style="flex: 1; min-width: 220px;">
+            <div class="card"><span class="badge low mb-1">Lifestyle</span>
+              <h5>Mindful Living</h5>
+              <p class="muted text-sm">Incorporating traditional mindfulness into your modern daily routine.</p><a
+                href="#" class="text-accent text-sm fw-semi">Learn more →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    document.getElementById("regBtn").addEventListener("click", async () => {
-      const btn = document.getElementById("regBtn");
-      const username = document.getElementById("regUser").value.trim();
-      const email = document.getElementById("regEmail").value.trim();
-      const password = document.getElementById("regPass").value;
-      const password2 = document.getElementById("regPass2").value;
+{% endblock %}
 
-      const msg = document.getElementById("regMsg");
-      msg.textContent = "";
+{% block scripts %}
+<script>
+  function showAuth(view) {
+    document.getElementById("loginForm").classList.add("hidden");
+    document.getElementById("regForm").classList.add("hidden");
+    document.getElementById("resetForm").classList.add("hidden");
+    if (view === "login") document.getElementById("loginForm").classList.remove("hidden");
+    if (view === "reg") document.getElementById("regForm").classList.remove("hidden");
+  }
+  function showReset() {
+    document.getElementById("loginForm").classList.add("hidden");
+    document.getElementById("regForm").classList.add("hidden");
+    document.getElementById("resetForm").classList.remove("hidden");
+  }
 
-      if (!username) {
-        msg.textContent = "Username is required.";
-        showToast("Validation", "Username is required.", "warn");
-        return;
-      }
-      if (email && !validateEmail(email)) {
-        msg.textContent = "Email format is invalid.";
-        showToast("Validation", "Email format is invalid.", "warn");
-        return;
-      }
-      if (!password || password.length < 8) {
-        msg.textContent = "Password must be at least 8 characters.";
-        showToast("Validation", "Password must be at least 8 characters.", "warn");
-        return;
-      }
-      if (password !== password2) {
-        msg.textContent = "Passwords do not match.";
-        showToast("Validation", "Passwords do not match.", "warn");
-        return;
-      }
+  document.getElementById("rememberMe").checked = (localStorage.getItem("remember_me") === "1");
 
-      setBtnLoading(btn, true, "Register");
-      try {
-        const res = await fetch("/api/v1/auth/register/", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ username, email, password, password2 })
-        });
+  document.getElementById("loginFormEl").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = document.getElementById("loginFormEl");
+    form.classList.add("was-validated");
+    if (!form.checkValidity()) return;
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          msg.textContent = "Registration failed. " + JSON.stringify(err);
-          showToast("Registration failed", "Check details and try again.", "error");
-          return;
-        }
-        msg.textContent = "Registered successfully. Please login.";
-        showToast("Registered", "Account created. Please login.", "ok");
-      } finally {
-        setBtnLoading(btn, false, "Register");
-      }
-    });
-  </script>
-</body>
-</html>
+    const btn = document.getElementById("loginBtn");
+    const username = document.getElementById("loginUser").value.trim();
+    const password = document.getElementById("loginPass").value;
+    const remember = document.getElementById("rememberMe").checked;
+    const msg = document.getElementById("loginMsg");
+    msg.textContent = "";
+
+    setRememberMe(remember);
+    setBtnLoading(btn, true, "Validating...");
+    try {
+      const res = await fetch("/api/v1/auth/jwt/create/", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) { msg.textContent = "Invalid credentials. Please try again."; showToast("Login failed", "Incorrect username or password.", "error"); return; }
+      const data = await res.json();
+      setTokens(data.access, data.refresh);
+      window.location.href = "/chat/";
+    } finally { setBtnLoading(btn, false, "Login to account"); }
+  });
+
+  document.getElementById("regBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("regBtn");
+    const username = document.getElementById("regUser").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPass").value;
+    const password2 = document.getElementById("regPass2").value;
+    const msg = document.getElementById("regMsg");
+    msg.textContent = "";
+    if (!username || !password) { showToast("Validation", "Username and password are required.", "warn"); return; }
+    if (password !== password2) { showToast("Validation", "Passwords do not match.", "warn"); return; }
+    setBtnLoading(btn, true, "Creating account...");
+    try {
+      const res = await fetch("/api/v1/auth/register/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, email, password, password2 }) });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); msg.textContent = "Registration failed. " + (err.detail || "Details invalid."); return; }
+      showToast("Successful", "Account created. You can now login.", "ok");
+      showAuth("login");
+    } finally { setBtnLoading(btn, false, "Register Account"); }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("resetBtn");
+    const username = document.getElementById("resetUser").value.trim();
+    const email = document.getElementById("resetEmail").value.trim();
+    const new_password = document.getElementById("resetPass").value;
+    const confirm_password = document.getElementById("resetPass2").value;
+    if (!username || !email || !new_password) { showToast("Required", "All fields are needed for verification.", "warn"); return; }
+    setBtnLoading(btn, true, "Updating...");
+    try {
+      const res = await fetch("/api/v1/auth/reset-password/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, email, new_password, confirm_password }) });
+      if (!res.ok) { showToast("Reset failed", "Verify username and registered email.", "error"); return; }
+      showToast("Success", "Password updated. Please login.", "ok");
+      showAuth("login");
+    } finally { setBtnLoading(btn, false, "Update Password"); }
+  });
+</script>
+{% endblock %}
