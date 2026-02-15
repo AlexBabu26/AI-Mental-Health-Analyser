@@ -17,7 +17,9 @@
       </tr>
     </thead>
     <tbody id="historyTableBody">
-      <tr><td colspan="4" class="text-center muted" style="padding: 40px 20px;">Curating your records...</td></tr>
+      <tr>
+        <td colspan="4" class="text-center muted" style="padding: 40px 20px;">Curating your records...</td>
+      </tr>
     </tbody>
   </table>
 </div>
@@ -28,13 +30,14 @@
   requireAuthOrRedirect();
 
   function riskBadge(risk) {
-    return '<span class="badge ' + (risk||"").toLowerCase() + '">' + risk + '</span>';
+    return '<span class="badge ' + (risk || "").toLowerCase() + '">' + risk + '</span>';
   }
 
   async function loadHistory() {
     const res = await apiFetch("/analysis/results/", { method: "GET" });
     if (!res.ok) return;
-    const items = await res.json();
+    const data = await res.json();
+    const items = data.results || [];
     const el = document.getElementById("historyTableBody");
 
     if (!items.length) {
@@ -42,9 +45,9 @@
       return;
     }
 
-    el.innerHTML = items.map(function(item) {
+    el.innerHTML = items.map(function (item) {
       return '<tr>' +
-        '<td><div class="fw-semi">' + new Date(item.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }) + '</div><div class="text-xs muted">' + new Date(item.created_at).toLocaleTimeString(undefined,{ hour:'2-digit', minute:'2-digit' }) + '</div></td>' +
+        '<td><div class="fw-semi">' + new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + '</div><div class="text-xs muted">' + new Date(item.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) + '</div></td>' +
         '<td class="text-sm fw-semi text-accent">SESSION #' + item.session + '</td>' +
         '<td class="text-sm muted" style="max-width:300px;"><div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + item.rationale_short + '</div></td>' +
         '<td>' + riskBadge(item.risk_level) + '</td></tr>';
