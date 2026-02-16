@@ -464,13 +464,15 @@ textarea:focus-visible {
   accent-color: var(--accent);
 }
 
-/* Toggle switch */
+/* Toggle switch - entire control is clickable via label */
 .toggle-switch {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .toggle-switch input {
@@ -478,6 +480,8 @@ textarea:focus-visible {
   opacity: 0;
   width: 0;
   height: 0;
+  margin: 0;
+  pointer-events: none;
 }
 
 .toggle-track {
